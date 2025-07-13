@@ -5,6 +5,10 @@
 #include "filters.hpp"
 #include "statsistics.hpp"
 
+#include <array>
+#include <deque>
+#include <list>
+
 using namespace bookdb;
 
 int main() {
@@ -18,11 +22,9 @@ int main() {
     //
 
     // Create a book database
-    BookDatabase<std::vector<Book>> db;
+    BookDatabase<std::deque<Book>> db;
 
-    /*
-
-    Код закомментирован, чтобы не приводить к ошибке компиляции
+    // Код закомментирован, чтобы не приводить к ошибке компиляции
 
     // Add some books
     db.EmplaceBack("1984", "George Orwell", 1949, Genre::SciFi, 4., 190);
@@ -33,19 +35,22 @@ int main() {
     db.EmplaceBack("The Catcher in the Rye", "J.D. Salinger", 1951, Genre::Fiction, 4.3, 112);
     db.EmplaceBack("Brave New World", "Aldous Huxley", 1932, Genre::SciFi, 4.5, 98);
     db.EmplaceBack("Jane Eyre", "Charlotte Brontë", 1847, Genre::Fiction, 4.6, 110);
-    db.EmplaceBack("The Hobbit", "J.R.R. Tolkien", 1937, Genre::Fiction, 4.9, 203);
-    db.EmplaceBack("Lord of the Flies", "William Golding", 1954, Genre::Fiction, 4.2, 89);
+    // db.EmplaceBack("The Hobbit", "J.R.R. Tolkien", 1937, Genre::Fiction, 4.9, 203);
+    // db.EmplaceBack("Lord of the Flies", "William Golding", 1954, Genre::Fiction, 4.2, 89);
     std::print("Books: {}\n\n", db);
 
+    // db.begin<std::vector<Book>::iterator>();
+    db.begin<std::deque<Book>::const_iterator>();
+
     // Sorts
-    std::sort(db.begin(), db.end(), comp::LessByAuthor{});
+    std::sort(db.begin<std::deque<Book>::iterator>(), db.end(), comp::LessByAuthor{});
     std::print("Books sorted by author: {}\n\n==================\n", db);
 
-    std::sort(db.begin(), db.end(), comp::LessByPopularity{});
-    std::print("Books sorted by popularity: {}\n\n==================\n", db);
+    /*std::sort(db.begin(), db.end(), comp::LessByRating{});
+    std::print("Books sorted by popularity: {}\n\n==================\n", db);*/
 
     // Author histogram
-    auto histogram = buildAuthorHistogramFlat(db);
+    /*auto histogram = buildAuthorHistogramFlat(db);
     std::print("Author histogram: {}", histogram);
 
     // Ratings

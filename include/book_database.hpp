@@ -1,5 +1,6 @@
 #pragma once
 
+#include <initializer_list>
 #include <print>
 #include <string>
 #include <string_view>
@@ -8,6 +9,7 @@
 #include "book.hpp"
 #include "concepts.hpp"
 #include "heterogeneous_lookup.hpp"
+#include <unordered_set>
 
 namespace bookdb {
 
@@ -15,12 +17,22 @@ template <BookContainerLike BookContainer = std::vector<Book>>
 class BookDatabase {
 public:
     // Type aliases
+    using value_type = typename BookContainer::value_type;
+    using reference = typename BookContainer::reference;
+    using const_reference = typename BookContainer::const_reference;
+    using size_type = BookContainer::size_type;
+    using iterator = typename BookContainer::iterator;
 
-    // Ваш код здесь
-
-    using AuthorContainer = BookContainer /* Ваш код здесь */;
+    using AuthorContainer = std::unordered_set<std::string>;
 
     BookDatabase() = default;
+    BookDatabase(std::initializer_list<Book> books) {
+        books_.reserve(books.size());
+        for (const auto &x : books) {
+            authors_.insert(std::string{x.author.begin(), x.author.end()});
+            books_.emplace_back(x.title, x.author, x.year, x.genre, x.rating, x.read_count);
+        }
+    }
 
     void Clear() {
         books_.clear();
@@ -28,8 +40,37 @@ public:
     }
 
     // Standard container interface methods
+    void push(const value_type &value) {
+        books_.push_back(value);
+        authors_.insert(value.author);
+    }
+    void push(value_type &&value) { books_.push_back(std::move(value)); }
+    void pop() { books_.pop_back(); }
+    reference top() { return books_.back(); }
+    const_reference top() const { return books_.back(); }
+    bool empty() const { return books_.empty(); }
+    size_type size() const { return books_.size(); }
 
-    // Ваш код здесь
+    template <BookIterator T = iterator>
+    T begin() {
+        return T(books_.begin());
+    }
+
+    template <BookSentinel<iterator> T = iterator>
+    T end() {
+        return T(books_.end());
+    }
+    const BookContainer &GetBooks() const { return books_; }
+    const AuthorContainer &GetAuthors() const { return authors_; }
+    void EmplaceBack(std::string title, std::string_view author, int year, Genre genre, double rating, int read_count) {
+        books_.emplace_back(title, author, year, genre, rating, read_count);
+        authors_.insert(std::string{author.begin(), author.end()});
+    }
+
+    void PushBack(const Book &b) {
+        books_.push_back(b);
+        authors_.insert(std::string{b.author.begin(), b.author.end()});
+    }
 
 private:
     BookContainer books_;
@@ -39,13 +80,13 @@ private:
 }  // namespace bookdb
 
 namespace std {
-template <>
-struct formatter<bookdb::BookDatabase<std::vector<bookdb::Book>>> {
+template <bookdb::BookContainerLike BookContainer>
+struct formatter<bookdb::BookDatabase<BookContainer>> {
     template <typename FormatContext>
-    auto format(const bookdb::BookDatabase<std::vector<bookdb::Book>> &db, FormatContext &fc) const {
-        /*
-        Раскомментируйте, когда bookdb::BookDatabase поддержит интерфейсы, доступные стандартным контейнерам
-        (size/begin/...)
+    auto format(const bookdb::BookDatabase<BookContainer> &db, FormatContext &fc) const {
+
+        // Раскомментируйте, когда bookdb::BookDatabase поддержит интерфейсы, доступные стандартным контейнерам
+        //(size/begin/...)
 
         format_to(fc.out(), "BookDatabase (size = {}): ", db.size());
 
@@ -58,7 +99,7 @@ struct formatter<bookdb::BookDatabase<std::vector<bookdb::Book>>> {
         for (const auto &author : db.GetAuthors()) {
             format_to(fc.out(), "- {}\n", author);
         }
-        */
+
         return fc.out();
     }
 
