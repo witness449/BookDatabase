@@ -28,11 +28,11 @@ struct GreaterByRating {
     bool operator()(const Book &a, const Book &b) { return a.rating > b.rating; }
 };
 
-struct LessByReadCount {
+struct LessByPopularity {
     bool operator()(const Book &a, const Book &b) { return a.read_count < b.read_count; }
 };
 
-struct GreaterByReadCount {
+struct GreaterBypopularity {
     bool operator()(const Book &a, const Book &b) { return a.read_count > b.read_count; }
 };
 

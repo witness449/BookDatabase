@@ -4,10 +4,8 @@
 #include "comparators.hpp"
 #include "filters.hpp"
 #include "statsistics.hpp"
-
-#include <array>
 #include <deque>
-#include <list>
+
 
 using namespace bookdb;
 
@@ -35,22 +33,19 @@ int main() {
     db.EmplaceBack("The Catcher in the Rye", "J.D. Salinger", 1951, Genre::Fiction, 4.3, 112);
     db.EmplaceBack("Brave New World", "Aldous Huxley", 1932, Genre::SciFi, 4.5, 98);
     db.EmplaceBack("Jane Eyre", "Charlotte Brontë", 1847, Genre::Fiction, 4.6, 110);
-    // db.EmplaceBack("The Hobbit", "J.R.R. Tolkien", 1937, Genre::Fiction, 4.9, 203);
-    // db.EmplaceBack("Lord of the Flies", "William Golding", 1954, Genre::Fiction, 4.2, 89);
+    db.EmplaceBack("The Hobbit", "J.R.R. Tolkien", 1937, Genre::Fiction, 4.9, 203);
+    db.EmplaceBack("Lord of the Flies", "William Golding", 1954, Genre::Fiction, 4.2, 89);
     std::print("Books: {}\n\n", db);
 
-    // db.begin<std::vector<Book>::iterator>();
-    db.begin<std::deque<Book>::const_iterator>();
-
     // Sorts
-    std::sort(db.begin<std::deque<Book>::iterator>(), db.end(), comp::LessByAuthor{});
+    std::sort(db.begin(), db.end(), comp::LessByAuthor{});
     std::print("Books sorted by author: {}\n\n==================\n", db);
 
-    /*std::sort(db.begin(), db.end(), comp::LessByRating{});
-    std::print("Books sorted by popularity: {}\n\n==================\n", db);*/
+    std::sort(db.begin(), db.end(), comp::LessByPopularity{});
+    std::print("Books sorted by popularity: {}\n\n==================\n", db);
 
     // Author histogram
-    /*auto histogram = buildAuthorHistogramFlat(db);
+    auto histogram = buildAuthorHistogramFlat(db);
     std::print("Author histogram: {}", histogram);
 
     // Ratings
@@ -60,8 +55,10 @@ int main() {
     auto avrRating = calculateAverageRating(db);
     std::print("Average books rating in library: {}\n", avrRating);
 
+    auto sample = sampleRandomBooks(db, 3);
+
     // Filters
-    auto filtered = filterBooks(db.begin(), db.end(), all_of(YearBetween(1900, 1999), RatingAbove(4.5)));
+    auto filtered = filterBooks(db.begin(), db.end(), all_of(YearBetween(1900, 1999), RatingAbove(4.4)));
     std::print("\n\nBooks from the 20th century with rating ≥ 4.5:\n");
     std::for_each(filtered.cbegin(), filtered.cend(), [](const auto &v) { std::print("{}\n", v.get()); });
 
@@ -74,7 +71,6 @@ int main() {
     if (orwellBookIt != db.end()) {
         std::print("\n\nTransparent lookup by authors. Found Orwell's book: {}\n", *orwellBookIt);
     }
-    */
 
     return 0;
 }

@@ -1,15 +1,12 @@
 #pragma once
 
 #include <initializer_list>
-#include <print>
-#include <string>
 #include <string_view>
+#include <unordered_set>
 #include <vector>
 
 #include "book.hpp"
 #include "concepts.hpp"
-#include "heterogeneous_lookup.hpp"
-#include <unordered_set>
 
 namespace bookdb {
 
@@ -22,6 +19,8 @@ public:
     using const_reference = typename BookContainer::const_reference;
     using size_type = BookContainer::size_type;
     using iterator = typename BookContainer::iterator;
+    using const_iterator = typename BookContainer::const_iterator;
+    using diff_type = iterator::difference_type;
 
     using AuthorContainer = std::unordered_set<std::string>;
 
@@ -42,26 +41,32 @@ public:
     // Standard container interface methods
     void push(const value_type &value) {
         books_.push_back(value);
-        authors_.insert(value.author);
+        authors_.insert(std::string{value.author.begin(), value.author.end()});
     }
-    void push(value_type &&value) { books_.push_back(std::move(value)); }
+    void push(value_type &&value) { 
+        books_.push_back(std::move(value));
+        authors_.insert(std::string{value.author.begin(), value.author.end()});
+    }
     void pop() { books_.pop_back(); }
     reference top() { return books_.back(); }
     const_reference top() const { return books_.back(); }
     bool empty() const { return books_.empty(); }
     size_type size() const { return books_.size(); }
+    const_reference at(size_t n) const { return books_.at(n); }
+    const_reference operator[](size_t n) const { return books_[n]; }
+    reference at(size_t n) { return books_.at(n); }
+    reference operator[](size_t n) { return books_[n]; }
+    
+    iterator begin() { return books_.begin(); }
+    const_iterator cbegin() const { return books_.cbegin(); }
+    iterator end() { return books_.end(); }
+    const_iterator cend() const { return books_.cend(); }
 
-    template <BookIterator T = iterator>
-    T begin() {
-        return T(books_.begin());
-    }
-
-    template <BookSentinel<iterator> T = iterator>
-    T end() {
-        return T(books_.end());
-    }
-    const BookContainer &GetBooks() const { return books_; }
+    const BookContainer &GetBooks() const { return books_; }  
+    BookContainer &GetBooks() { return books_; }
     const AuthorContainer &GetAuthors() const { return authors_; }
+    AuthorContainer &GetAuthors(){return authors_;}
+
     void EmplaceBack(std::string title, std::string_view author, int year, Genre genre, double rating, int read_count) {
         books_.emplace_back(title, author, year, genre, rating, read_count);
         authors_.insert(std::string{author.begin(), author.end()});

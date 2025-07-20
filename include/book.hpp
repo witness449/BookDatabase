@@ -1,8 +1,9 @@
 #pragma once
 
 #include <format>
-#include <stdexcept>
 #include <string_view>
+
+
 
 namespace bookdb {
 
@@ -10,16 +11,18 @@ enum class Genre { Fiction, NonFiction, SciFi, Biography, Mystery, Unknown };
 
 // Ваш код для constexpr преобразования строк в enum::Genre и наоборот здесь
 
+using std::operator""sv;
+
 constexpr Genre GenreFromString(std::string_view s) {
-    if (s == "Fiction") {
+    if (!s.compare("Fiction"sv)) {
         return Genre::Fiction;
-    } else if (s == "NonFiction") {
+    } else if (!s.compare("NonFiction"sv)) {
         return Genre::NonFiction;
-    } else if (s == "SciFi") {
+    } else if (!s.compare("SciFi"sv)) {
         return Genre::SciFi;
-    } else if (s == "Biography") {
+    } else if (!s.compare("Biography"sv)) {
         return Genre::Biography;
-    } else if (s == "Mystery") {
+    } else if (!s.compare("Mystery"sv)) {
         return Genre::Mystery;
     }
     return Genre::Unknown;
@@ -60,6 +63,11 @@ struct Book {
         : author(author), title(title), year(year), genre(GenreFromString(genre)), rating(rating),
           read_count(read_count) {};
     Book() = default;
+
+    auto operator<=>(const Book &other) const = default;
+    
+    friend auto operator<=>(const Book &l, std::string_view r) { return l.author <=> r; }
+    friend auto operator<=>(const std::string &l, const Book &r) { return l <=> r.author; }
 };
 }  // namespace bookdb
 
@@ -78,13 +86,11 @@ struct formatter<bookdb::Genre, char> {
 }  // namespace std
 
 // Ваш код для std::formatter<Book> здесь
-
 namespace std {
 template <>
 struct formatter<bookdb::Book, char> {
     template <typename FormatContext>
     auto format(const bookdb::Book b, FormatContext &fc) const {
-
         return format_to(fc.out(), "Author: {}, Title: {}, Year: {}, Genre: {}, Rating: {}, Read count: {}", b.author,
                          b.title, b.year, bookdb::StringFromGenre(b.genre), b.rating, b.read_count);
     }
