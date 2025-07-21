@@ -1,9 +1,9 @@
 #pragma once
 
+#include "book.hpp"
 #include <concepts>
 #include <cstddef>
 #include <iterator>
-#include "book.hpp"
 
 namespace bookdb {
 

@@ -22,11 +22,8 @@ struct TransparentStringEqual {
 
 struct TransparentStringHash {
     using is_transparent = void;
-
     auto operator()(const Book &b) const { return std::hash<std::string_view>{}(b.author); }
-    bool operator()(const Book &l, const Book &r) const { return std::hash<std::string_view>{}(l.author) == std::hash<std::string_view>{}(l.author); }
-    bool operator()(std::string l, const Book &r) const { return std::hash<std::string_view>{}(l) == std::hash<std::string_view>{}(r.author);}
-    bool operator()(const Book &l, std::string r) const { return this->operator()(r, l); }
+    auto operator()(std::string l) const { return std::hash<std::string_view>{}(l); }
 };
 
 }  // namespace bookdb

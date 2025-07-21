@@ -3,13 +3,9 @@
 #include <format>
 #include <string_view>
 
-
-
 namespace bookdb {
 
 enum class Genre { Fiction, NonFiction, SciFi, Biography, Mystery, Unknown };
-
-// Ваш код для constexpr преобразования строк в enum::Genre и наоборот здесь
 
 using std::operator""sv;
 
@@ -46,7 +42,6 @@ constexpr std::string_view StringFromGenre(Genre genre) {
 }
 
 struct Book {
-    // string_view для экономии памяти, чтобы ссылаться на оригинальную строку, хранящуюся в другом контейнере
     std::string_view author;
     std::string title;
 
@@ -55,7 +50,6 @@ struct Book {
     double rating;
     int read_count;
 
-    // Ваш код для конструкторов здесь
     constexpr Book(std::string title, std::string_view author, int year, Genre genre, double rating, int read_count)
         : author(author), title(title), year(year), genre(genre), rating(rating), read_count(read_count) {};
     constexpr Book(std::string title, std::string_view author, int year, std::string_view genre, double rating,
@@ -65,7 +59,7 @@ struct Book {
     Book() = default;
 
     auto operator<=>(const Book &other) const = default;
-    
+
     friend auto operator<=>(const Book &l, std::string_view r) { return l.author <=> r; }
     friend auto operator<=>(const std::string &l, const Book &r) { return l <=> r.author; }
 };
@@ -78,15 +72,9 @@ struct formatter<bookdb::Genre, char> {
     auto format(const bookdb::Genre g, FormatContext &fc) const {
         return format_to(fc.out(), "{}", bookdb::StringFromGenre(g));
     }
-
-    constexpr auto parse(format_parse_context &ctx) {
-        return ctx.begin();  // Просто игнорируем пользовательский формат
-    }
+    constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
 };
-}  // namespace std
 
-// Ваш код для std::formatter<Book> здесь
-namespace std {
 template <>
 struct formatter<bookdb::Book, char> {
     template <typename FormatContext>
@@ -94,10 +82,7 @@ struct formatter<bookdb::Book, char> {
         return format_to(fc.out(), "Author: {}, Title: {}, Year: {}, Genre: {}, Rating: {}, Read count: {}", b.author,
                          b.title, b.year, bookdb::StringFromGenre(b.genre), b.rating, b.read_count);
     }
-
-    constexpr auto parse(format_parse_context &ctx) {
-        return ctx.begin();  // Просто игнорируем пользовательский формат
-    }
+    constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
 };
 
 }  // namespace std

@@ -40,13 +40,15 @@ public:
 
     // Standard container interface methods
     void push(const value_type &value) {
+        authors_.insert(std::string{value.author.begin(), value.author.end()});
         books_.push_back(value);
-        authors_.insert(std::string{value.author.begin(), value.author.end()});
     }
-    void push(value_type &&value) { 
+
+    void push(value_type &&value) {
+        authors_.insert(std::string{value.author.begin(), value.author.end()});
         books_.push_back(std::move(value));
-        authors_.insert(std::string{value.author.begin(), value.author.end()});
     }
+
     void pop() { books_.pop_back(); }
     reference top() { return books_.back(); }
     const_reference top() const { return books_.back(); }
@@ -56,16 +58,15 @@ public:
     const_reference operator[](size_t n) const { return books_[n]; }
     reference at(size_t n) { return books_.at(n); }
     reference operator[](size_t n) { return books_[n]; }
-    
     iterator begin() { return books_.begin(); }
     const_iterator cbegin() const { return books_.cbegin(); }
     iterator end() { return books_.end(); }
     const_iterator cend() const { return books_.cend(); }
 
-    const BookContainer &GetBooks() const { return books_; }  
+    const BookContainer &GetBooks() const { return books_; }
     BookContainer &GetBooks() { return books_; }
     const AuthorContainer &GetAuthors() const { return authors_; }
-    AuthorContainer &GetAuthors(){return authors_;}
+    AuthorContainer &GetAuthors() { return authors_; }
 
     void EmplaceBack(std::string title, std::string_view author, int year, Genre genre, double rating, int read_count) {
         books_.emplace_back(title, author, year, genre, rating, read_count);
@@ -89,27 +90,18 @@ template <bookdb::BookContainerLike BookContainer>
 struct formatter<bookdb::BookDatabase<BookContainer>> {
     template <typename FormatContext>
     auto format(const bookdb::BookDatabase<BookContainer> &db, FormatContext &fc) const {
-
-        // Раскомментируйте, когда bookdb::BookDatabase поддержит интерфейсы, доступные стандартным контейнерам
-        //(size/begin/...)
-
         format_to(fc.out(), "BookDatabase (size = {}): ", db.size());
-
         format_to(fc.out(), "Books:\n");
         for (const auto &book : db.GetBooks()) {
             format_to(fc.out(), "- {}\n", book);
         }
-
         format_to(fc.out(), "Authors:\n");
         for (const auto &author : db.GetAuthors()) {
             format_to(fc.out(), "- {}\n", author);
         }
-
         return fc.out();
     }
 
-    constexpr auto parse(format_parse_context &ctx) {
-        return ctx.begin();  // Просто игнорируем пользовательский формат
-    }
+    constexpr auto parse(format_parse_context &ctx) { return ctx.begin(); }
 };
 }  // namespace std

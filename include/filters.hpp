@@ -32,7 +32,7 @@ auto any_of(Predicates... predicates) {
 template <BookIterator it, BookPredicate p>
 std::vector<std::reference_wrapper<bookdb::Book>> filterBooks(it first, it last, p pred) {
     std::vector<std::reference_wrapper<bookdb::Book>> result;
-    auto distance=std::distance(first, last);
+    auto distance = std::distance(first, last);
     result.reserve(distance);
     std::copy_if(first, last, std::back_inserter(result), pred);
     return result;

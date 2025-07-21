@@ -1,21 +1,18 @@
 #pragma once
 
 #include <algorithm>
+#include <flat_map>
 #include <flat_set>
 #include <iterator>
 #include <numeric>
 #include <random>
-#include <string_view>
-#include <flat_map>
+#include <type_traits>
 #include <utility>
-#include <print>
 
 #include "book.hpp"
 #include "book_database.hpp"
 #include "concepts.hpp"
 #include "heterogeneous_lookup.hpp"
-
-
 
 namespace bookdb {
 
@@ -27,14 +24,17 @@ struct RatingCount {
 
 template <BookContainerLike T, typename Comparator = TransparentStringLess>
 auto buildAuthorHistogramFlat(const BookDatabase<T> &b, TransparentStringLess Comp = {}) {
+    // Контейнер с книгами на основе прозрачного компаратора
     std::flat_multiset<Book, Comparator> bookSet(Comp);
-    std::flat_map<std::string_view, int> resultMap;
+    // Контейнер с авторами
+    std::flat_map<std::string, int> resultMap;
 
-    if(b.empty()){
+    if (b.empty()) {
         return resultMap;
     }
-    
+
     for_each(b.cbegin(), b.cend(), [&](const Book &book) { bookSet.insert(book); });
+
     auto authors = b.GetAuthors();
     for (const auto &a : authors) {
         resultMap.emplace(a, bookSet.count(a));
@@ -46,9 +46,13 @@ template <BookIterator it>
 auto calculateGenreRatings(it i1, it i2) {
     std::flat_map<bookdb::Genre, bookdb::RatingCount> flatRatingCount;
 
-    if(i1==i2){
+    if (i1 == i2) {
         return flatRatingCount;
     }
+
+    // Ассерт на случай неконстантного итератора
+    static_assert(std::is_const_v<std::remove_reference_t<decltype(*i1)>>, "Iterator must point to a const type.");
+    static_assert(std::is_const_v<std::remove_reference_t<decltype(*i2)>>, "Iterator must point to a const type.");
 
     std::for_each(i1, i2, [&](const auto &b) {
         auto iter = flatRatingCount.lower_bound(b.genre);
@@ -73,7 +77,7 @@ auto calculateGenreRatings(it i1, it i2) {
 
 template <BookContainerLike T>
 double calculateAverageRating(const BookDatabase<T> &books) {
-    if(books.empty()){
+    if (books.empty()) {
         return 0.0;
     }
     double r =
@@ -82,10 +86,10 @@ double calculateAverageRating(const BookDatabase<T> &books) {
 }
 
 template <BookContainerLike T>
-auto sampleRandomBooks(BookDatabase<T> &books, size_t n) {
+auto sampleRandomBooks(const BookDatabase<T> &books, size_t n) {
     std::vector<Book> sampleBooks;
 
-    if(n==0||books.empty()){
+    if (n == 0 || books.empty()) {
         return sampleBooks;
     }
 
@@ -100,15 +104,15 @@ auto sampleRandomBooks(BookDatabase<T> &books, size_t n) {
 template <typename T, BookComparator Comp>
 auto getTopNBy(BookDatabase<T> &books, size_t n, Comp comp) {
     std::vector<std::reference_wrapper<const Book>> topBooks;
-    if(n==0){
+    if (n == 0) {
         return topBooks;
     }
-    if(n>books.size()){
+    if (n > books.size()) {
         throw std::logic_error("N greater than database size");
     }
     auto &m_books = books.GetBooks();
     std::partial_sort(m_books.begin(), m_books.begin() + n, m_books.end(), comp);
-    
+
     topBooks.reserve(n);
     std::transform(m_books.begin(), m_books.begin() + n, std::back_inserter(topBooks),
                    [](const Book &book) { return std::cref(book); });
@@ -119,9 +123,9 @@ auto getTopNBy(BookDatabase<T> &books, size_t n, Comp comp) {
 
 namespace std {
 template <>
-struct formatter<std::flat_map<std::string_view, int>> {
+struct formatter<std::flat_map<std::string, int>> {
     template <typename FormatContext>
-    auto format(const std::flat_map<std::string_view, int> &m, FormatContext &fc) const {
+    auto format(const std::flat_map<std::string, int> &m, FormatContext &fc) const {
         auto out = fc.out();
         for (const auto &x : m) {
 
