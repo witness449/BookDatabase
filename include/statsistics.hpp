@@ -60,7 +60,7 @@ auto calculateGenreRatings(it i1, it i2) {
             iter->second.count++;
             iter->second.rating += b.rating;
         } else {
-            flatRatingCount.emplace(std::make_pair(b.genre, RatingCount{b.rating, 1, false}));  // tuple ne nado
+            flatRatingCount.emplace(std::make_pair(b.genre, RatingCount{b.rating, 1, false})); 
         }
     });
 
