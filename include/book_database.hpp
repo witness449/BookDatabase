@@ -70,16 +70,14 @@ public:
 
     void EmplaceBack(std::string_view title, std::string_view author, int year, Genre genre, double rating,
                      int read_count) {
-        auto it = authors_.insert(std::string{author.begin(), author.end()});
+        auto it = authors_.emplace(std::string{author.begin(), author.end()});
         books_.emplace_back(title, *it.first, year, genre, rating, read_count);
     }
 
     void PushBack(const Book &b) {
-        books_.push_back(b);
-        authors_.insert(std::string{b.author.begin(), b.author.end()});
+        auto it = authors_.insert(std::string{b.author.begin(), b.author.end()});
+        books_.push_back({b.title, *it.first, b.year, b.genre, b.rating, b.read_count});
     }
-
-    void PushBackk() {}
 
 private:
     BookContainer books_;

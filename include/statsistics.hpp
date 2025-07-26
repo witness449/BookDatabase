@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <flat_map>
-#include <flat_set>
 #include <iterator>
 #include <numeric>
 #include <random>
@@ -13,7 +12,6 @@
 #include "book_database.hpp"
 #include "concepts.hpp"
 #include "heterogeneous_lookup.hpp"
-#include <iostream>
 
 namespace bookdb {
 
@@ -25,8 +23,6 @@ struct RatingCount {
 template <BookContainerLike T, typename Comparator = TransparentStringLess>
 std::flat_map<std::string_view, int, Comparator> buildAuthorHistogramFlat(const BookDatabase<T> &b,
                                                                           Comparator Comp = {}) {
-    // Контейнер с книгами на основе прозрачного компаратора
-    // std::flat_multiset<Book, Comparator> bookSet(Comp);
     // Контейнер с авторами
     std::flat_map<std::string_view, int, Comparator> resultMap(Comp);
 
@@ -72,7 +68,7 @@ auto calculateGenreRatings(it i1, it i2) {
     std::vector<double> avRatings;
 
     auto ratings{std::move(flatRatingCount).extract()};
-    for (auto &x : ratings.values) {
+    for (const auto &x : ratings.values) {
         avRatings.push_back(x.rating / x.count);
     }
 
