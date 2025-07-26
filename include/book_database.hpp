@@ -28,8 +28,8 @@ public:
     BookDatabase(std::initializer_list<Book> books) {
         books_.reserve(books.size());
         for (const auto &x : books) {
-            authors_.insert(std::string{x.author.begin(), x.author.end()});
-            books_.emplace_back(x.title, x.author, x.year, x.genre, x.rating, x.read_count);
+            auto it = authors_.insert(std::string{x.author.begin(), x.author.end()});
+            books_.emplace_back(x.title, *it.first, x.year, x.genre, x.rating, x.read_count);
         }
     }
 
@@ -68,15 +68,18 @@ public:
     const AuthorContainer &GetAuthors() const { return authors_; }
     AuthorContainer &GetAuthors() { return authors_; }
 
-    void EmplaceBack(std::string title, std::string_view author, int year, Genre genre, double rating, int read_count) {
-        books_.emplace_back(title, author, year, genre, rating, read_count);
-        authors_.insert(std::string{author.begin(), author.end()});
+    void EmplaceBack(std::string_view title, std::string_view author, int year, Genre genre, double rating,
+                     int read_count) {
+        auto it = authors_.insert(std::string{author.begin(), author.end()});
+        books_.emplace_back(title, *it.first, year, genre, rating, read_count);
     }
 
     void PushBack(const Book &b) {
         books_.push_back(b);
         authors_.insert(std::string{b.author.begin(), b.author.end()});
     }
+
+    void PushBackk() {}
 
 private:
     BookContainer books_;

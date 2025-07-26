@@ -50,9 +50,10 @@ struct Book {
     double rating;
     int read_count;
 
-    constexpr Book(std::string title, std::string_view author, int year, Genre genre, double rating, int read_count)
+    constexpr Book(std::string_view title, std::string_view author, int year, Genre genre, double rating,
+                   int read_count)
         : author(author), title(title), year(year), genre(genre), rating(rating), read_count(read_count) {};
-    constexpr Book(std::string title, std::string_view author, int year, std::string_view genre, double rating,
+    constexpr Book(std::string_view title, std::string_view author, int year, std::string_view genre, double rating,
                    int read_count)
         : author(author), title(title), year(year), genre(GenreFromString(genre)), rating(rating),
           read_count(read_count) {};
@@ -78,7 +79,7 @@ struct formatter<bookdb::Genre, char> {
 template <>
 struct formatter<bookdb::Book, char> {
     template <typename FormatContext>
-    auto format(const bookdb::Book b, FormatContext &fc) const {
+    auto format(const bookdb::Book &b, FormatContext &fc) const {
         return format_to(fc.out(), "Author: {}, Title: {}, Year: {}, Genre: {}, Rating: {}, Read count: {}", b.author,
                          b.title, b.year, bookdb::StringFromGenre(b.genre), b.rating, b.read_count);
     }

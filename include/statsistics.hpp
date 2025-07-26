@@ -13,41 +13,46 @@
 #include "book_database.hpp"
 #include "concepts.hpp"
 #include "heterogeneous_lookup.hpp"
+#include <iostream>
 
 namespace bookdb {
 
 struct RatingCount {
     double rating = 0;
     int count = 0;
-    bool modified = false;
 };
 
 template <BookContainerLike T, typename Comparator = TransparentStringLess>
-auto buildAuthorHistogramFlat(const BookDatabase<T> &b, TransparentStringLess Comp = {}) {
+std::flat_map<std::string_view, int, Comparator> buildAuthorHistogramFlat(const BookDatabase<T> &b,
+                                                                          Comparator Comp = {}) {
     // Контейнер с книгами на основе прозрачного компаратора
-    std::flat_multiset<Book, Comparator> bookSet(Comp);
+    // std::flat_multiset<Book, Comparator> bookSet(Comp);
     // Контейнер с авторами
-    std::flat_map<std::string, int> resultMap;
+    std::flat_map<std::string_view, int, Comparator> resultMap(Comp);
 
     if (b.empty()) {
         return resultMap;
     }
 
-    for_each(b.cbegin(), b.cend(), [&](const Book &book) { bookSet.insert(book); });
+    for_each(b.cbegin(), b.cend(), [&](const Book &book) {
+        typename std::flat_map<std::string_view, int, Comparator>::iterator it;
+        if (it = resultMap.find(book.author), it != resultMap.end()) {
+            it->second++;
+        } else {
+            resultMap.insert(std::pair{book.author, 1});
+        }
+    });
 
-    auto authors = b.GetAuthors();
-    for (const auto &a : authors) {
-        resultMap.emplace(a, bookSet.count(a));
-    }
     return resultMap;
 }
 
 template <BookIterator it>
 auto calculateGenreRatings(it i1, it i2) {
     std::flat_map<bookdb::Genre, bookdb::RatingCount> flatRatingCount;
+    std::flat_map<bookdb::Genre, double> flatAvRating;
 
     if (i1 == i2) {
-        return flatRatingCount;
+        return flatAvRating;
     }
 
     // Ассерт на случай неконстантного итератора
@@ -60,19 +65,20 @@ auto calculateGenreRatings(it i1, it i2) {
             iter->second.count++;
             iter->second.rating += b.rating;
         } else {
-            flatRatingCount.emplace(std::make_pair(b.genre, RatingCount{b.rating, 1, false})); 
+            flatRatingCount.emplace(std::make_pair(b.genre, RatingCount{b.rating, 1}));
         }
     });
 
+    std::vector<double> avRatings;
+
     auto ratings{std::move(flatRatingCount).extract()};
     for (auto &x : ratings.values) {
-        x.rating = x.rating / x.count;
-        x.modified = true;
+        avRatings.push_back(x.rating / x.count);
     }
 
-    flatRatingCount.replace(std::move(ratings.keys), std::move(ratings.values));
+    flatAvRating.replace(std::move(ratings.keys), std::move(avRatings));
 
-    return flatRatingCount;
+    return flatAvRating;
 }
 
 template <BookContainerLike T>
@@ -81,13 +87,13 @@ double calculateAverageRating(const BookDatabase<T> &books) {
         return 0.0;
     }
     double r =
-        std::accumulate(books.cbegin(), books.cend(), 0.0, [](double sum, const Book &b) { return sum += b.rating; });
+        std::transform_reduce(books.cbegin(), books.cend(), 0.0, std::plus{}, [](const Book &b) { return b.rating; });
     return r / books.size();
 }
 
 template <BookContainerLike T>
 auto sampleRandomBooks(const BookDatabase<T> &books, size_t n) {
-    std::vector<Book> sampleBooks;
+    std::vector<std::reference_wrapper<const Book>> sampleBooks;
 
     if (n == 0 || books.empty()) {
         return sampleBooks;
@@ -123,9 +129,9 @@ auto getTopNBy(BookDatabase<T> &books, size_t n, Comp comp) {
 
 namespace std {
 template <>
-struct formatter<std::flat_map<std::string, int>> {
+struct formatter<std::flat_map<std::string_view, int, bookdb::TransparentStringLess>> {
     template <typename FormatContext>
-    auto format(const std::flat_map<std::string, int> &m, FormatContext &fc) const {
+    auto format(const std::flat_map<std::string_view, int, bookdb::TransparentStringLess> &m, FormatContext &fc) const {
         auto out = fc.out();
         for (const auto &x : m) {
 
@@ -141,12 +147,12 @@ struct formatter<std::flat_map<std::string, int>> {
 };
 
 template <>
-struct formatter<std::flat_map<bookdb::Genre, bookdb::RatingCount>> {
+struct formatter<std::flat_map<bookdb::Genre, double>> {
     template <typename FormatContext>
-    auto format(std::flat_map<bookdb::Genre, bookdb::RatingCount> &m, FormatContext &fc) const {
+    auto format(const std::flat_map<bookdb::Genre, double> &m, FormatContext &fc) const {
         auto out = fc.out();
         for (const auto &x : m) {
-            out = format_to(out, "\nGenre {}, Rating {} ", bookdb::StringFromGenre(x.first), x.second.rating);
+            out = format_to(out, "\nGenre {}, Rating {} ", bookdb::StringFromGenre(x.first), x.second);
         }
         return out;
     }

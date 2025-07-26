@@ -33,8 +33,8 @@ TEST_F(StatisticsTest, AuthorHistogram) {
 TEST_F(StatisticsTest, GenreRatings) {
     auto ratings = calculateGenreRatings(db.cbegin(), db.cend());
     EXPECT_EQ(ratings.size(), 2);
-    EXPECT_NEAR(ratings[Genre::SciFi].rating, 4.0, 1e-9);
-    EXPECT_NEAR(ratings[Genre::Fiction].rating, 4.6, 1e-9);
+    EXPECT_NEAR(ratings[Genre::SciFi], 4.0, 1e-9);
+    EXPECT_NEAR(ratings[Genre::Fiction], 4.6, 1e-9);
     auto emptyRatings = calculateGenreRatings(emptyDb.cbegin(), emptyDb.cend());
     EXPECT_TRUE(emptyRatings.empty());
 }

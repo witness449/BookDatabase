@@ -12,7 +12,7 @@ using namespace bookdb;
 int main() {
 
     // Create a book database
-    BookDatabase<std::deque<Book>> db;
+    BookDatabase<std::vector<Book>> db;
 
     // Add some books
     db.EmplaceBack("1984", "George Orwell", 1949, Genre::SciFi, 4., 190);

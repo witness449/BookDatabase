@@ -21,12 +21,12 @@ auto GenreIs(bookdb::Genre genre) {
 
 template <BookPredicate... Predicates>
 auto all_of(Predicates... predicates) {
-    return [=](const Book &b) { return (predicates(b) && ...); };
+    return [... predicates = std::move(predicates)](const Book &b) { return (predicates(b) && ...); };
 };
 
 template <BookPredicate... Predicates>
 auto any_of(Predicates... predicates) {
-    return [=](const Book &b) { return (predicates(b) || ...); };
+    return [... predicates = std::move(predicates)](const Book &b) { return (predicates(b) || ...); };
 };
 
 template <BookIterator it, BookPredicate p>
